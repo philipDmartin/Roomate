@@ -43,7 +43,18 @@ namespace Roommates
             roomRepo.Insert(bathroom);
 
             Console.WriteLine("-------------------------------");
-            Console.WriteLine($"Added the new Room with id {bathroom.Id}");
+            Console.WriteLine($"Added the new Room with id {bathroom.Id} and name {bathroom.Name}: {bathroom.MaxOccupancy}");
+
+            bathroom.Name = "updadted room to have Occupancy of";
+            bathroom.MaxOccupancy = 3;
+            roomRepo.Update(bathroom);
+
+            allRooms = roomRepo.GetAll();
+
+            foreach (Room room in allRooms)
+            {
+                Console.WriteLine($"{room.Id} {room.Name} {room.MaxOccupancy}");
+            }
         }
     }
 }
