@@ -40,14 +40,14 @@ namespace Roommates
                 MaxOccupancy = 1
             };
 
-            roomRepo.Insert(bathroom);
+            //roomRepo.Insert(bathroom);
 
-            Console.WriteLine("-------------------------------");
-            Console.WriteLine($"Added the new Room with id {bathroom.Id} and name {bathroom.Name}: {bathroom.MaxOccupancy}");
+            //Console.WriteLine("-------------------------------");
+            //Console.WriteLine($"Added the new Room with id {bathroom.Id} and name {bathroom.Name}: {bathroom.MaxOccupancy}");
 
-            bathroom.Name = "updadted room to have Occupancy of";
-            bathroom.MaxOccupancy = 3;
-            roomRepo.Update(bathroom);
+            //bathroom.Name = "Pooproom";
+            //bathroom.MaxOccupancy = 3;
+            //roomRepo.Update(bathroom);
 
             allRooms = roomRepo.GetAll();
 
@@ -55,6 +55,11 @@ namespace Roommates
             {
                 Console.WriteLine($"{room.Id} {room.Name} {room.MaxOccupancy}");
             }
+
+            //roomRepo.Delete(17);
+            //roomRepo.Delete(18);
+            //roomRepo.Delete(19);
+            //roomRepo.Delete(20);
         }
     }
 }
