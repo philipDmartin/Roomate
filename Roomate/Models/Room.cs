@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Roommates.Models
+﻿namespace Roommates.Models
 {
     // C# representation of the Room table
     public class Room

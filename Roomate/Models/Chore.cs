@@ -1,5 +1,3 @@
-using System;
-
 namespace Roommates.Models
 {
     // C# representation of the Chore table
