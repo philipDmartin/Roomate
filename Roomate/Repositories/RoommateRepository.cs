@@ -7,7 +7,6 @@ namespace Roommates.Repositories
 {
     public class RoommateRepository : BaseRepository
     {
-       
         public RoommateRepository(string connectionString) : base(connectionString) { }
 
         public List<Roommate> GetAll()
@@ -18,7 +17,7 @@ namespace Roommates.Repositories
 
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = "SELECT Id, FirstName, LastName, RentPortion, MovedInDate, Room FROM Room";
+                    cmd.CommandText = "SELECT Id, FirstName, LastName, RentPortion, MoveInDate FROM Roommate";
 
                     SqlDataReader reader = cmd.ExecuteReader();
 
@@ -39,19 +38,16 @@ namespace Roommates.Repositories
                         int rentPortionColunPosition = reader.GetOrdinal("RentPortion");
                         int rentPortionValue = reader.GetInt32(rentPortionColunPosition);
 
-                        int movedInDateColunPosition = reader.GetOrdinal("MovedInDate");
-                        DateTime movedInDateValue = reader.GetDateTime(movedInDateColunPosition);
-
-                        int roomIdColunPosition = reader.GetOrdinal("RoomId");
-                        int roomIdValue = reader.GetInt32(roomIdColunPosition);
+                        int moveInDateColunPosition = reader.GetOrdinal("MoveInDate");
+                        DateTime moveInDateValue = reader.GetDateTime(moveInDateColunPosition);
 
                         Roommate roommate = new Roommate
                         {
                             Id = idValue,
-                            Firstname = firstNameValue,
-                            Lastname = lastNameValue,
+                            FirstName = firstNameValue,
+                            LastName = lastNameValue,
                             RentPortion = rentPortionValue,
-                            MovedInDate = movedInDateValue,
+                            MoveInDate = moveInDateValue,
                             Room = null
                         };
 
@@ -72,7 +68,7 @@ namespace Roommates.Repositories
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = "SELECT Id, FirstName, LastName, RentPortion, MovedInDate FROM Room";
+                    cmd.CommandText = "SELECT Id, FirstName, LastName, RentPortion, MoveInDate FROM Roommate";
                     cmd.Parameters.AddWithValue("@id", id);
                     SqlDataReader reader = cmd.ExecuteReader();
 
@@ -83,16 +79,65 @@ namespace Roommates.Repositories
                         roommate = new Roommate
                         {
                             Id = id,
-                            Firstname = reader.GetString(reader.GetOrdinal("Firstname")),
-                            Lastname = reader.GetString(reader.GetOrdinal("Lastname")),
+                            FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                            LastName = reader.GetString(reader.GetOrdinal("LastName")),
                             RentPortion = reader.GetInt32(reader.GetOrdinal("RentPortion")),
-                            MovedInDate = reader.GetDateTime(reader.GetOrdinal("MovedInDate"))
+                            MoveInDate = reader.GetDateTime(reader.GetOrdinal("MoveInDate"))
                         };
                     }
 
                     reader.Close();
 
                     return roommate;
+                }
+            }
+        }
+
+        public List<Roommate> GetAllWithRoom()
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"SELECT rm.Id,
+                                      rm.FirstName,
+                                      rm.LastName,
+                                      rm.RentPortion,
+                                      rm.MoveInDate,
+                                      rm.RoomId AS RoomId,
+                                      r.Name,
+                                      r.MaxOccupancy
+                                      FROM Roommate rm
+                                      LEFT JOIN Room r on r.Id = rm.roomId";
+
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    Roommate roommate = null;
+                    List<Roommate> roommates = new List<Roommate>();
+
+                    while (reader.Read())
+                    {
+                        roommate = new Roommate
+                        {
+                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                            FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                            LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                            RentPortion = reader.GetInt32(reader.GetOrdinal("RentPortion")),
+                            MoveInDate = reader.GetDateTime(reader.GetOrdinal("MoveInDate")),
+                            Room = new Room()
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                                Name = reader.GetString(reader.GetOrdinal("Name")),
+                                MaxOccupancy = reader.GetInt32(reader.GetOrdinal("MaxOccupancy"))
+                            }
+                        };
+
+                        roommates.Add(roommate);
+                    }
+                    reader.Close();
+
+                    return roommates;
                 }
             }
         }
@@ -104,20 +149,20 @@ namespace Roommates.Repositories
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"INSERT INTO Roommate (FirstName, LastName, RentPortion, MovedInDate) 
+                    cmd.CommandText = @"INSERT INTO Roommate (FirstName, LastName, RentPortion, MoveInDate, RoomId) 
                                                  OUTPUT INSERTED.Id 
-                                                 VALUES (@firstName, @lastName, @rentPortion, @movedInDate)";
-                    cmd.Parameters.AddWithValue("@firstName", roommate.Firstname);
-                    cmd.Parameters.AddWithValue("@lastName", roommate.Lastname);
+                                                 VALUES (@firstName, @lastName, @rentPortion, @moveInDate, @roomId)";
+                    cmd.Parameters.AddWithValue("@firstName", roommate.FirstName);
+                    cmd.Parameters.AddWithValue("@lastName", roommate.LastName);
                     cmd.Parameters.AddWithValue("@rentPortion", roommate.RentPortion);
-                    cmd.Parameters.AddWithValue("@movedInDate", roommate.MovedInDate);
+                    cmd.Parameters.AddWithValue("@moveInDate", roommate.MoveInDate);
+                    cmd.Parameters.AddWithValue("@roomId", roommate.Room.Id);
 
                     int id = (int)cmd.ExecuteScalar();
 
                     roommate.Id = id;
                 }
             }
-
         }
 
         public void Update(Roommate roommate)
@@ -128,16 +173,16 @@ namespace Roommates.Repositories
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = @"UPDATE Roommate
-                                            SET FirstName = @fisrtname,
+                                            SET FirstName = @fisrtName,
                                                 LastName = @lastName,
                                                 RentPortion = @rentPortion,
-                                                MovedInDate = @movedInDate
+                                                MoveInDate = @movedInDate
 
                                             WHERE Id = @id";
-                    cmd.Parameters.AddWithValue("@firstname", roommate.Firstname);
-                    cmd.Parameters.AddWithValue("@lastname", roommate.Lastname);
+                    cmd.Parameters.AddWithValue("@firstName", roommate.FirstName);
+                    cmd.Parameters.AddWithValue("@lastName", roommate.LastName);
                     cmd.Parameters.AddWithValue("@rentPortion", roommate.RentPortion);
-                    cmd.Parameters.AddWithValue("@movedInDate", roommate.MovedInDate);
+                    cmd.Parameters.AddWithValue("@moveInDate", roommate.MoveInDate);
 
                     cmd.Parameters.AddWithValue("@id", roommate.Id);
 
